@@ -3,33 +3,24 @@ require 'nokogiri'
 module Fuse
   class Document
 
+    attr_reader :source_path, :xsl_path
+
     def initialize(options)
-      @options = options
+      source = (@options = options)[:source]
+      raise Fuse::Exception::SourceUnknown if source.nil?
+      raise Fuse::Exception::SourceUnknown::NotFound.new(source) unless File.exists?(source)
+      @source_path = expect_one(potential_sources, :source, Fuse::Exception::SourceUnknown)
+      @xsl_path = expect_one(potential_xsl, :xsl, Fuse::Exception::XslMissing) if source_path.match(/\.xml$/i)
     end
 
     def to_s
       File.read source_path
     end
 
-    def source_path
-      @source_path ||= expect_one(potential_sources, :source, Fuse::Exception::SourceUnknown)
-    end
-
-    def xsl_path
-      @xsl_path ||= (source_path.match(/\.xml$/i)) && expect_one(potential_xsl, :xsl, Fuse::Exception::XslMissing)
-    end
-
     private
 
       def root
-        opt = @options[:source]
-        @root ||= if File.directory?(opt)
-          opt
-        elsif File.file?(opt)
-          File.dirname opt
-        else
-          File.dirname source_path
-        end
+        @root ||= File.directory?((opt = @options[:source])) ? opt : File.dirname(opt)
       end
 
       def potential_xsl

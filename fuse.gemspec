@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.description       = ''
   s.authors           = ['Neil E. Pearson']
   s.email             = 'neil@helium.net.au'
-  s.files             = Dir['Rakefile', '{bin,lib,spec}/**/*', 'README*', 'LICENSE*']
+  s.files             = Dir['{bin,lib}/**/*', 'README*', 'LICENSE*'] & `git ls-files -z`.split("\0")
   s.homepage          = 'https://github.com/hx/fuse'
   s.executables       += Dir['bin/*'].map { |f| File.basename(f) }
   '
@@ -19,4 +19,5 @@ Gem::Specification.new do |s|
     sass              ~> 3.2.5
 
   '.strip.split(/[\r\n]+/).each { |line| s.add_dependency *(line.strip.split ' ', 2) }
+  s.add_development_dependency 'rspec', '~> 2.12.2'
 end
