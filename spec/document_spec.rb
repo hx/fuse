@@ -61,6 +61,19 @@ describe Fuse::Document do
       its(:source_path) { should == 'spec/fixtures/html/document.html' }
       its(:xsl_path)    { should be_nil }
 
+      describe 'output' do
+
+        subject { Fuse::Document.new(options).to_s }
+        it { should include '<p>Hello!</p>' }
+
+        describe 'with a title' do
+          before { options.update title: 'This & that!' }
+          it { should include '<title>This &amp; that!</title>' }
+        end
+
+
+      end
+
       describe 'file' do
         let(:options) {{ source: 'spec/fixtures/html/document.html' }}
         its(:source_path) { should == 'spec/fixtures/html/document.html' }

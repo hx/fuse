@@ -9,17 +9,38 @@ class Fuse::Document
     raise Fuse::Exception::SourceUnknown if source.nil?
     raise Fuse::Exception::SourceUnknown::NotFound.new(source) unless File.exists?(source)
     @source_path = expect_one(potential_sources, :source, Fuse::Exception::SourceUnknown)
-    @xsl_path = expect_one(potential_xsl, :xsl, Fuse::Exception::XslMissing) if source_path.match(/\.xml$/i)
+    @xsl_path = expect_one(potential_xsl, :xsl, Fuse::Exception::XslMissing) if source_xml?
   end
 
   def to_s
-    File.read source_path
+    result.to_s
+  end
+
+  def result
+    document = Nokogiri::HTML(if xsl_path
+      Nokogiri::XSLT(File.read xsl_path).transform(Nokogiri::XML(File.read source_path))
+    else
+      File.read source_path
+    end)
+
+    html = document.css('> html').first
+    body = html.css('> body').first
+    head = html.css('> head').first || body.add_previous_sibling(Nokogiri::XML::Node.new 'head', document)
+    title = head.css('> title').first || head.add_child(Nokogiri::XML::Node.new 'title', document)
+
+    title.content = @options[:title] unless @options[:title].nil?
+
+    document
   end
 
   private
 
     def root
       @root ||= File.directory?((opt = @options[:source])) ? opt : File.dirname(opt)
+    end
+
+    def source_xml?
+      source_path.match(/\.xml$/i)
     end
 
     def potential_xsl
