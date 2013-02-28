@@ -1,3 +1,5 @@
+require 'nokogiri'
+
 class Fuse::Server
 
   def initialize(options)
@@ -6,14 +8,60 @@ class Fuse::Server
 
   def call(env)
 
-    path = env['REQUEST_PATH']
+    request = Rack::Request.new(env)
 
-    if (asset = Fuse::Document::Asset.for(path))
+    call_options = @options.merge Hash[request.GET.map{ |k, v| [k.to_sym, v] }]
+
+    if (asset = Fuse::Document::Asset.for(request.path))
       asset.call(env)
     else
-      doc = Fuse::Document.new(@options)
+      begin
+        doc = Fuse::Document.new(call_options)
+      rescue Fuse::Exception::SourceUnknown::TooManySources
+        doc = render_list($!.options, $!.option_name)
+      rescue Fuse::Exception
+        if $!.message
+          doc = render_error($!.message)
+        else
+          raise
+        end
+      end
+
       [200, {'Content-Type' => 'text/html'}, [doc.to_s]]
     end
 
   end
+
+  private
+
+    def render_error(text)
+      render_body do |h|
+        h.p { h.text text }
+      end
+    end
+
+    def render_list(assets, key)
+      render_body do |h|
+        h.h3 { h.text "Choose #{key}:" }
+        h.ul {
+          assets.each do |asset|
+            h.li {
+              h.a(href: '?' + Rack::Utils.build_query(request.GET.merge(key.to_s => asset))) {
+                h.text asset
+              }
+            }
+          end
+        }
+      end
+    end
+
+    def render_body
+      Nokogiri::HTML::Builder.new do |h|
+        h.html {
+          h.head { h.title { h.text 'Fuse' } }
+          h.body { yield h }
+        }
+      end.to_html
+    end
+
 end
