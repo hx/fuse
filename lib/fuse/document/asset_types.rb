@@ -5,11 +5,11 @@ require 'uglifier'
 class Fuse::Document::Asset
 
   module HasDependents
-    COMMENT_PATTERN = %r`^\s*(/\*.*?\*/|(\s*//.*\s+)+)`
+    COMMENT_PATTERN = %r`^\s*(/\*[\s\S]*?\*/|(\s*//.*\s+)+)`
     REQUIRE_PATTERN = %r`^\s*(?:\*|//)=\s+(require|require_glob)\s+(.+?)\s*$`
 
     def dependents
-      ret = AssetCollection.new
+      ret = Fuse::Document::AssetCollection.new
       local_root = File.dirname(full_path)
       if (comments = raw[COMMENT_PATTERN])
         comments.lines.each do |line|
@@ -22,7 +22,7 @@ class Fuse::Document::Asset
               else
                 []
             end.map do |p|
-              Asset.for(p[@root.length..-1], @root)
+              Fuse::Document::Asset.for(p[@root.length..-1], @root)
             end.reject do |p|
               p.nil?
             end.each do |p|
@@ -37,6 +37,15 @@ class Fuse::Document::Asset
 
   class StyleSheet < self
     include HasDependents
+    def embed_with
+      {
+          tag_name: 'link',
+          attributes: {
+              rel: 'stylesheet',
+              href: path.sub(%r`^/`, '')
+          }
+      }
+    end
     def compress; ::Sass.compile raw, style: :compressed end
     class Sass < self
       def filter; ::Sass.compile raw, style: :expanded end
@@ -46,6 +55,15 @@ class Fuse::Document::Asset
 
   class JavaScript < self
     include HasDependents
+    def embed_with
+      {
+          tag_name: 'script',
+          attributes: {
+              type: 'text/javascript',
+              src: path.sub(%r`^/`, '')
+          }
+      }
+    end
     def compress; Uglifier.compile filtered end
     class Coffee < self
       def filter; CoffeeScript.compile raw end

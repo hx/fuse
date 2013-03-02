@@ -1,7 +1,7 @@
 class Fuse::Document::Asset
 
   def self.[](dir)
-    assets = AssetCollection.new
+    assets = Fuse::Document::AssetCollection.new
     Dir[File.join dir, '**/*.*'].each do |full_path|
       asset = self.for(full_path[dir.length..-1], dir)
       assets << asset if asset

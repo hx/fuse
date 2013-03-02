@@ -1,14 +1,17 @@
+# coding: utf-8
+
 require 'spec_helper'
 
 describe Fuse::Document do
 
+  let(:options) { Fuse::DEFAULTS[:common].merge Fuse::DEFAULTS[:server] }
   subject { Fuse::Document.new(options) }
 
   describe 'Source determination' do
 
     describe 'With an empty directory' do
 
-      let(:options) {{ source: 'spec/fixtures/empty' }}
+      before { options[:source] = 'spec/fixtures/empty' }
       it 'should raise SourceUnknown' do
         expect { subject }.to raise_exception(Fuse::Exception::SourceUnknown)
       end
@@ -17,7 +20,7 @@ describe Fuse::Document do
 
     describe 'With a nonexistent file' do
 
-      let(:options) {{ source: 'a/nonexistent/file' }}
+      before { options[:source] = 'a/nonexistent/file' }
 
       it 'should raise NotFound' do
         expect { subject }.to raise_exception(Fuse::Exception::SourceUnknown::NotFound)
@@ -28,26 +31,34 @@ describe Fuse::Document do
 
     describe 'XML with XSL' do
 
-      describe 'with a dir' do
-        let(:options) {{ source: 'spec/fixtures/xml_and_xsl' }}
-        its(:source_path) { should == 'spec/fixtures/xml_and_xsl/document.xml' }
-        its(:xsl_path)    { should == 'spec/fixtures/xml_and_xsl/template.xsl' }
+      before do
+        options[:source] = 'spec/fixtures/xml_and_xsl/document.xml'
+        options[:encoding] = 'utf-8'
       end
+      its(:source_path) { should == 'spec/fixtures/xml_and_xsl/document.xml' }
+      its(:xsl_path)    { should == 'spec/fixtures/xml_and_xsl/template.xsl' }
+      its(:to_s)        { should include '<p>“Child 2”</p>' }
 
-      describe 'with just an xml doc)' do
-        let(:options) {{ source: 'spec/fixtures/xml_and_xsl/document.xml'}}
+      describe 'with a dir' do
+        before { options[:source] = 'spec/fixtures/xml_and_xsl' }
         its(:source_path) { should == 'spec/fixtures/xml_and_xsl/document.xml' }
         its(:xsl_path)    { should == 'spec/fixtures/xml_and_xsl/template.xsl' }
       end
 
       describe 'with a dir and template' do
-        let(:options) {{ source: 'spec/fixtures/xml_and_xsl', xsl: 'spec/fixtures/xml_and_xsl/template.xsl' }}
+        before do
+          options[:source] = 'spec/fixtures/xml_and_xsl'
+          options[:xsl] = 'spec/fixtures/xml_and_xsl/template.xsl'
+        end
         its(:source_path) { should == 'spec/fixtures/xml_and_xsl/document.xml' }
         its(:xsl_path)    { should == 'spec/fixtures/xml_and_xsl/template.xsl' }
       end
 
       describe 'with a dir and nonexistent template' do
-        let(:options) {{ source: 'spec/fixtures/xml_and_xsl', xsl: 'a/nonexistent/template.xsl' }}
+        before do
+          options[:source] = 'spec/fixtures/xml_and_xsl'
+          options[:xsl] = 'a/nonexistent/template.xsl'
+        end
         it 'should raise SourceUnknown' do
           expect { subject }.to raise_exception(Fuse::Exception::SourceUnknown)
         end
@@ -57,7 +68,7 @@ describe Fuse::Document do
 
     describe 'HTML' do
 
-      let(:options) {{ source: 'spec/fixtures/html' }}
+      before { options[:source] = 'spec/fixtures/html' }
       its(:source_path) { should == 'spec/fixtures/html/document.html' }
       its(:xsl_path)    { should be_nil }
 
@@ -67,17 +78,25 @@ describe Fuse::Document do
         it { should include '<p>Hello!</p>' }
 
         describe 'with a title' do
-          before { options.update title: 'This & that!' }
+          before { options[:title] = 'This & that!' }
           it { should include '<title>This &amp; that!</title>' }
         end
 
-
       end
 
-      describe 'file' do
-        let(:options) {{ source: 'spec/fixtures/html/document.html' }}
+      describe 'stylesheets (referenced)' do
+        before { options[:embed_assets] = false }
+        subject { Nokogiri::HTML(Fuse::Document.new(options).to_s).css('> html > head > link[rel=stylesheet]') }
+        its(:length) { should == 2 }
+        it 'should reference style2, then style1 as per style1\'s "require" directive' do
+          subject[0]['href'].should == 'style2.css'
+          subject[1]['href'].should == 'style1.css'
+        end
+      end
+
+      describe 'a specific file' do
+        before { options[:source] = 'spec/fixtures/html/document.html' }
         its(:source_path) { should == 'spec/fixtures/html/document.html' }
-        its(:xsl_path)    { should be_nil }
       end
 
     end

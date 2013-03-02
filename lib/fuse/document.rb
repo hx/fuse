@@ -13,31 +13,47 @@ class Fuse::Document
   end
 
   def to_s
-    result.to_s
+    result.to_html encoding: @options[:encoding]
   end
 
   def result
-    document = Nokogiri::HTML(if xsl_path
-      Nokogiri::XSLT(File.read xsl_path).transform(Nokogiri::XML(File.read source_path))
+
+    #todo find a way to transform Nokogiri XML to HTML without serializing
+
+    document = if xsl_path
+      Nokogiri::HTML(Nokogiri::XSLT(File.read xsl_path).transform(Nokogiri::XML(File.read source_path)).to_html encoding: @options[:encoding])
     else
-      File.read source_path
-    end)
+      Nokogiri::HTML(File.read source_path)
+    end
 
     html = document.css('> html').first
     body = html.css('> body').first
     head = html.css('> head').first || body.add_previous_sibling(Nokogiri::XML::Node.new 'head', document)
-    title = head.css('> title').first || head.add_child(Nokogiri::XML::Node.new 'title', document)
 
-    title.content = @options[:title] unless @options[:title].nil?
+    document.title = @options[:title] unless @options[:title].nil?
+
+    [Fuse::Document::Asset::StyleSheet, Fuse::Document::Asset::JavaScript].each do |klass|
+      collection = assets.of_type(klass).sort!
+      if @options[:embed_assets]
+
+      else
+        collection.each do |asset|
+          data = asset.embed_with
+          tag = Nokogiri::XML::Node.new(data[:tag_name], document)
+          data[:attributes].each { |k, v| tag[k] = v unless v.nil? }
+          head << tag
+        end
+      end
+    end
 
     document
   end
 
-  private
+  def root
+    @root ||= File.directory?((opt = @options[:source])) ? opt : File.dirname(opt)
+  end
 
-    def root
-      @root ||= File.directory?((opt = @options[:source])) ? opt : File.dirname(opt)
-    end
+  private
 
     def source_xml?
       source_path.match(/\.xml$/i)

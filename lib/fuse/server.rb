@@ -12,21 +12,21 @@ class Fuse::Server
 
     call_options = @options.merge Hash[request.GET.map{ |k, v| [k.to_sym, v] }]
 
-    if (asset = Fuse::Document::Asset.for(request.path))
+    begin
+      doc = Fuse::Document.new(call_options)
+    rescue Fuse::Exception::SourceUnknown::TooManySources
+      doc = render_list($!.options, $!.option_name)
+    rescue Fuse::Exception
+      if $!.message
+        doc = render_error($!.message)
+      else
+        raise
+      end
+    end
+
+    if (asset = Fuse::Document::Asset.for(request.path, doc.root))
       asset.call(env)
     else
-      begin
-        doc = Fuse::Document.new(call_options)
-      rescue Fuse::Exception::SourceUnknown::TooManySources
-        doc = render_list($!.options, $!.option_name)
-      rescue Fuse::Exception
-        if $!.message
-          doc = render_error($!.message)
-        else
-          raise
-        end
-      end
-
       [200, {'Content-Type' => 'text/html'}, [doc.to_s]]
     end
 

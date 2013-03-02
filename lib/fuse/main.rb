@@ -5,11 +5,16 @@ module Fuse
 
   DEFAULTS = {
     common: {
-      source: '.'
+      source: '.',
+      encoding: 'UTF-8'
     },
     server: {
+        port: 9460,
+        embed_assets: false
     },
     compile: {
+        embed_assets: true,
+        compress_assets: true
     }
   }
 
@@ -27,22 +32,51 @@ module Fuse
       opts.separator ''
       opts.separator 'Options:'
 
-      opts.on('-s', '--source [FILE|DIR]', 'The source directory, or HTML or XML document') do |doc|
+      opts.on('-s',
+              '--source [FILE|DIR]',
+              'The source directory, or HTML or XML document. Default is current directory.'
+      ) do |doc|
         options[:source] = doc
       end
 
-      opts.on('-x', '--xsl FILE', 'XSL transformation stylesheet') do |xsl|
+      opts.on('-x',
+              '--xsl FILE',
+              'XSL transformation stylesheet. Default is current directory.'
+      ) do |xsl|
         abort "#{xsl} isn't a valid XSL stylesheet" unless xsl.match(/\.xsl$/i)
         options[:xsl] = xsl
       end
 
-      opts.on('-p', '--port PORT', Integer, 'Port on which to listen (only with "server" command)') do |port|
+      opts.on('-p',
+              '--port PORT',
+              Integer,
+              "Port on which to listen (only with 'server' command). Default is #{DEFAULTS[:server][:port]}."
+      ) do |port|
         options[:port] = port
       end
 
-      opts.on('-t', '--title TITLE', 'HTML document title') { |t| options[:title] = t }
+      opts.on('-t',
+              '--title TITLE',
+              'HTML document title'
+      ) do |t|
+        options[:title] = t
+      end
 
-      opts.on_tail('-h', '--help', 'Show this message') { puts opts.to_s }
+      opts.on('-e',
+              '--encoding CHARSET',
+              "Output encoding. Default is #{DEFAULTS[:common][:encoding]}."
+      ) do |e|
+        options[:encoding] = e
+      end
+
+      opts.on('-m',
+              '--[no-]embed-assets',
+              'Embed assets.'
+      ) do |embed|
+        options[:embed_assets] = embed
+      end
+
+      opts.on_tail('-h', '--help', 'Show this message.') { puts opts.to_s }
 
     end
 
@@ -53,7 +87,7 @@ module Fuse
     case ARGV[0]
 
       when 'server'
-        Thin::Server.start('0.0.0.0', options[:port] || 9460) do
+        Thin::Server.start('0.0.0.0', options[:port]) do
           use Rack::ShowExceptions
           run Server.new(options)
         end
