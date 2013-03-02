@@ -109,12 +109,15 @@ describe Fuse::Document do
           options[:embed_assets] = true
           options[:compress_assets] = true
         end
+        #noinspection RubyResolve
         its(:to_s) do
           should include '12px/14px Arial'
-          should match /padding:\s*0/
+          should include 'padding:0'
           should include 'Hello from Script 1'
           should include 'Hello from Script 2'
           should include 'url(data:image/png;base64,MTIz)'
+          should include '<img src="data:image/jpeg;base64,NDU2"'
+          should include 'url(data:image/gif;base64,Nzg5)"></div>'
         end
       end
 

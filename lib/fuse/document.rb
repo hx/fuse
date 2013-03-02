@@ -42,7 +42,6 @@ class Fuse::Document
           (@options[:compress_assets] ? asset.compress : asset.filtered).strip
         end.reject{ |x| x.length == 0 }.join(klass::JOIN_WITH)
         next unless raw.length > 0
-        raw.gsub!(/url\((.*?)\)/) { 'url(%s)' % datauri_for_asset($1) } if klass == Fuse::Document::Asset::StyleSheet
         tag.content = raw
         head << tag
       else
@@ -55,6 +54,17 @@ class Fuse::Document
       end
     end
 
+    #embed images
+    if @options[:embed_assets]
+      %w|@src @href @style style|.each do |xpath|
+        document.xpath('//' + xpath).each do |node|
+          assets.of_type(Fuse::Document::Asset::Image).each do |asset|
+            node.content = node.content.gsub asset.path.sub(%r`^/`, ''), asset.to_datauri
+          end
+        end
+      end
+    end
+
     document
   end
 
@@ -63,13 +73,6 @@ class Fuse::Document
   end
 
   private
-
-    def datauri_for_asset(path)
-      assets.each do |asset|
-        return asset.to_datauri if asset.path.sub(%r`^/`, '') == path
-      end
-      path
-    end
 
     def source_xml?
       source_path.match(/\.xml$/i)
