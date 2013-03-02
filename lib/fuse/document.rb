@@ -34,11 +34,20 @@ class Fuse::Document
 
     [Fuse::Document::Asset::StyleSheet, Fuse::Document::Asset::JavaScript].each do |klass|
       collection = assets.of_type(klass).sort!
+      next unless collection.length > 0
       if @options[:embed_assets]
-
+        tag = Nokogiri::XML::Node.new(klass::EMBED_WITH, document)
+        raw = collection.map do |asset|
+          tag['type'] = asset.type
+          (@options[:compress_assets] ? asset.compress : asset.filtered).strip
+        end.reject{ |x| x.length == 0 }.join(klass::JOIN_WITH)
+        next unless raw.length > 0
+        raw.gsub!(/url\((.*?)\)/) { 'url(%s)' % datauri_for_asset($1) } if klass == Fuse::Document::Asset::StyleSheet
+        tag.content = raw
+        head << tag
       else
         collection.each do |asset|
-          data = asset.embed_with
+          data = asset.reference_with
           tag = Nokogiri::XML::Node.new(data[:tag_name], document)
           data[:attributes].each { |k, v| tag[k] = v unless v.nil? }
           head << tag
@@ -54,6 +63,13 @@ class Fuse::Document
   end
 
   private
+
+    def datauri_for_asset(path)
+      assets.each do |asset|
+        return asset.to_datauri if asset.path.sub(%r`^/`, '') == path
+      end
+      path
+    end
 
     def source_xml?
       source_path.match(/\.xml$/i)

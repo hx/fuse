@@ -1,3 +1,5 @@
+require 'base64'
+
 class Fuse::Document::Asset
 
   def self.[](dir)
@@ -46,6 +48,17 @@ class Fuse::Document::Asset
     else
       Rack::File.new(@root).call(env)
     end
+  end
+
+  def type
+    @mime_type ||= Rack::Mime.mime_type(File.extname path)
+  end
+
+  def to_datauri(compress = false)
+    'data:%s;base64,%s' % [
+        type,
+        Base64.strict_encode64(compress && respond_to?(:compress) ? self.compress : raw)
+    ]
   end
 
 end

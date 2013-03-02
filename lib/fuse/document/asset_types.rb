@@ -36,9 +36,11 @@ class Fuse::Document::Asset
   end
 
   class StyleSheet < self
+    EMBED_WITH = 'style'
+    JOIN_WITH = ''
     MEDIA_PATTERN = /\(([a-z]+(?:,\s*[a-z]+)*)\)\.[a-z]+$/i
     include HasDependents
-    def embed_with
+    def reference_with
       {
           tag_name: 'link',
           attributes: {
@@ -52,27 +54,29 @@ class Fuse::Document::Asset
       @media ||= (match = MEDIA_PATTERN.match(path)) && match[1].split(/,\s*/).sort.join(', ')
     end
     def compress; ::Sass.compile raw, style: :compressed end
+    def type; 'text/css' end
     class Sass < self
       def filter; ::Sass.compile raw, style: :expanded end
-      def type; 'text/css' end
     end
   end
 
   class JavaScript < self
+    EMBED_WITH = 'script'
+    JOIN_WITH = ';'
     include HasDependents
-    def embed_with
+    def reference_with
       {
           tag_name: 'script',
           attributes: {
-              type: 'text/javascript',
+              type: type,
               src: path.sub(%r`^/`, '')
           }
       }
     end
     def compress; Uglifier.compile filtered end
+    def type; 'text/javascript' end
     class Coffee < self
       def filter; CoffeeScript.compile raw end
-      def type; 'text/javascript' end
     end
   end
 
@@ -101,6 +105,7 @@ class Fuse::Document::Asset
       jpeg:   Image,
       png:    Image,
       gif:    Image,
+      svg:    Image,
       ttf:    Font,
       woff:   Font,
       eot:    Font,

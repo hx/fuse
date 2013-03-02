@@ -32,34 +32,11 @@ module Fuse
       opts.separator ''
       opts.separator 'Options:'
 
-      opts.on('-s',
-              '--source [FILE|DIR]',
-              'The source directory, or HTML or XML document. Default is current directory.'
-      ) do |doc|
-        options[:source] = doc
-      end
-
-      opts.on('-x',
-              '--xsl FILE',
-              'XSL transformation stylesheet. Default is current directory.'
-      ) do |xsl|
-        abort "#{xsl} isn't a valid XSL stylesheet" unless xsl.match(/\.xsl$/i)
-        options[:xsl] = xsl
-      end
-
-      opts.on('-p',
-              '--port PORT',
-              Integer,
-              "Port on which to listen (only with 'server' command). Default is #{DEFAULTS[:server][:port]}."
-      ) do |port|
-        options[:port] = port
-      end
-
-      opts.on('-t',
-              '--title TITLE',
-              'HTML document title'
-      ) do |t|
-        options[:title] = t
+      opts.on('-c',
+              '--[no-]compress-assets',
+              'Compress assets.'
+      ) do |compress|
+        options[:compress_assets] = compress
       end
 
       opts.on('-e',
@@ -74,6 +51,36 @@ module Fuse
               'Embed assets.'
       ) do |embed|
         options[:embed_assets] = embed
+      end
+
+      opts.on('-p',
+              '--port PORT',
+              Integer,
+              "Port on which to listen (only with 'server' command). Default is #{DEFAULTS[:server][:port]}."
+      ) do |port|
+        options[:port] = port
+      end
+
+      opts.on('-s',
+              '--source [FILE|DIR]',
+              'The source directory, or HTML or XML document. Default is current directory.'
+      ) do |doc|
+        options[:source] = doc
+      end
+
+      opts.on('-t',
+              '--title TITLE',
+              'HTML document title.'
+      ) do |t|
+        options[:title] = t
+      end
+
+      opts.on('-x',
+              '--xsl FILE',
+              'XSL transformation stylesheet. Default is current directory.'
+      ) do |xsl|
+        abort "#{xsl} isn't a valid XSL stylesheet" unless xsl.match(/\.xsl$/i)
+        options[:xsl] = xsl
       end
 
       opts.on_tail('-h', '--help', 'Show this message.') { puts opts.to_s }

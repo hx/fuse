@@ -104,6 +104,20 @@ describe Fuse::Document do
         end
       end
 
+      describe 'embedded assets' do
+        before do
+          options[:embed_assets] = true
+          options[:compress_assets] = true
+        end
+        its(:to_s) do
+          should include '12px/14px Arial'
+          should match /padding:\s*0/
+          should include 'Hello from Script 1'
+          should include 'Hello from Script 2'
+          should include 'url(data:image/png;base64,MTIz)'
+        end
+      end
+
       describe 'a specific file' do
         before { options[:source] = 'spec/fixtures/html/document.html' }
         its(:source_path) { should == 'spec/fixtures/html/document.html' }
