@@ -24,4 +24,5 @@ EOF
 
   '.strip.split(/[\r\n]+/).each { |line| s.add_dependency *(line.strip.split ' ', 2) }
   s.add_development_dependency 'rspec', '~> 2.12.2'
+  s.add_development_dependency 'capybara', '~> 2.0.2'
 end
