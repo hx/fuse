@@ -8,18 +8,19 @@ class Fuse::Server
 
   def call(env)
 
-    @env = env
+    request = Rack::Request.new(env)
 
     call_options = @options.merge Hash[request.GET.map{ |k, v| [k.to_sym, v] }]
 
-    if (asset = Fuse::Document::Asset.for(request.path, File.directory?(@options[:source]) ? @options[:source] : File.dirname(@options[:source])))
+    if @root && (asset = Fuse::Document::Asset.for(request.path))
       return asset.call(env)
     end
 
     begin
       doc = Fuse::Document.new(call_options)
+      @root = doc.root
     rescue Fuse::Exception::SourceUnknown::TooManySources
-      doc = render_list($!.options, $!.option_name)
+      doc = render_list($!.options, $!.option_name, request)
     rescue Fuse::Exception
       if $!.message
         doc = render_error($!.message)
@@ -34,17 +35,13 @@ class Fuse::Server
 
   private
 
-    def request
-      Rack::Request.new(@env)
-    end
-
     def render_error(text)
       render_body do |h|
         h.p { h.text text }
       end
     end
 
-    def render_list(assets, key)
+    def render_list(assets, key, request)
       render_body do |h|
         h.h3 { h.text "Choose #{key}:" }
         h.ul {
