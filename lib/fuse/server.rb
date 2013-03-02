@@ -8,9 +8,13 @@ class Fuse::Server
 
   def call(env)
 
-    request = Rack::Request.new(env)
+    @env = env
 
     call_options = @options.merge Hash[request.GET.map{ |k, v| [k.to_sym, v] }]
+
+    if (asset = Fuse::Document::Asset.for(request.path, File.directory?(@options[:source]) ? @options[:source] : File.dirname(@options[:source])))
+      return asset.call(env)
+    end
 
     begin
       doc = Fuse::Document.new(call_options)
@@ -24,15 +28,15 @@ class Fuse::Server
       end
     end
 
-    if (asset = Fuse::Document::Asset.for(request.path, doc.root))
-      asset.call(env)
-    else
-      [200, {'Content-Type' => 'text/html'}, [doc.to_s]]
-    end
+    [200, {'Content-Type' => 'text/html'}, [doc.to_s]]
 
   end
 
   private
+
+    def request
+      Rack::Request.new(@env)
+    end
 
     def render_error(text)
       render_body do |h|

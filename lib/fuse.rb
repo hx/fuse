@@ -3,7 +3,7 @@ require 'thin'
 
 module Fuse
 
-  VERSION = '0.1.0'
+  VERSION = '0.1.1'
 
   def self.root
     @root ||= File.expand_path File.dirname(__FILE__)
