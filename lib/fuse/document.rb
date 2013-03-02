@@ -32,6 +32,7 @@ class Fuse::Document
 
     document.title = @options[:title] unless @options[:title].nil?
 
+    #attach stylesheets and scripts
     [Fuse::Document::Asset::StyleSheet, Fuse::Document::Asset::JavaScript].each do |klass|
       collection = assets.of_type(klass).sort!
       next unless collection.length > 0
@@ -54,12 +55,41 @@ class Fuse::Document
       end
     end
 
-    #embed images
+    #create font stylesheet
+    font_css = ''
+    fonts = {}
+    assets.of_type(Fuse::Document::Asset::Font).each do |asset|
+      (fonts[asset.face] ||= {})[asset.extension.to_sym] = asset
+    end
+    if fonts.length > 0
+      fonts.values.each do |formats|
+        first = formats.values.first
+        font_css << '@font-face{'
+        font_css << 'font-family: "%s";' % first.family
+        font_css << 'font-weight: %s;'   % first.weight
+        font_css << 'font-style: %s;'    % first.style
+        font_css << 'src: url("%s");'    % formats[:eot].relative_path if formats[:eot]
+        css_formats = []
+        Fuse::Document::Asset::Font::CSS_FORMATS.each do |css_format|
+          css_formats << 'url("%s") format("%s")' % [
+              formats[css_format[:extension]].relative_path,
+              css_format[:format]
+          ] if formats[css_format[:extension]]
+        end
+        font_css << 'src: %s;' % css_formats.join(', ') if css_formats.any?
+      end
+    end
+    unless font_css.empty?
+      style_node = head.css('style:not([media]), style[media=all]').first || head.add_child(Nokogiri::XML::Node.new 'style', document)
+      style_node.content = font_css + style_node.content
+    end
+
+    #embed images and fonts
     if @options[:embed_assets]
       %w|@src @href @style style|.each do |xpath|
         document.xpath('//' + xpath).each do |node|
-          assets.of_type(Fuse::Document::Asset::Image).each do |asset|
-            node.content = node.content.gsub asset.path.sub(%r`^/`, ''), asset.to_datauri
+          assets.of_type(Fuse::Document::Asset::Image, Fuse::Document::Asset::Font).each do |asset|
+            node.content = node.content.gsub asset.relative_path, asset.to_datauri
           end
         end
       end

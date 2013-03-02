@@ -29,6 +29,10 @@ class Fuse::Document::Asset
     @full_path ||= File.join @root, @path
   end
 
+  def relative_path
+    @relative_path ||= path.sub(%r`^/`, '')
+  end
+
   def raw
     @raw ||= File.open(full_path, 'rb') { |f| f.read }
   end
@@ -51,7 +55,7 @@ class Fuse::Document::Asset
   end
 
   def type
-    @mime_type ||= Rack::Mime.mime_type(File.extname path)
+    @type ||= Rack::Mime.mime_type('.' + extension)
   end
 
   def to_datauri(compress = false)
@@ -59,6 +63,10 @@ class Fuse::Document::Asset
         type,
         Base64.strict_encode64(compress && respond_to?(:compress) ? self.compress : raw)
     ]
+  end
+
+  def extension
+    @extension ||= File.extname(path).downcase[1..-1]
   end
 
 end

@@ -1,7 +1,11 @@
 class Fuse::Document::AssetCollection < Array
 
-  def of_type(type)
-    self.class.new select { |a| a.is_a? type }
+  def of_type(*types)
+    self.class.new select { |a|
+      ret = types.include? a.class
+      types.each { |type| ret ||= a.is_a? type } unless ret
+      ret
+    }
   end
 
   def sort!
