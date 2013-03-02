@@ -39,6 +39,16 @@ describe Fuse::Document do
       its(:xsl_path)    { should == 'spec/fixtures/xml_and_xsl/template.xsl' }
       its(:to_s)        { should include '<p>“Child 2”</p>' }
 
+      describe 'stylesheet media (referenced)' do
+        before { options[:embed_assets] = false }
+        subject { Nokogiri::HTML(Fuse::Document.new(options).to_s).css('> html > head > link[rel=stylesheet]') }
+        it 'should reflect media specified in file names' do
+          subject[0]['media'].should be_nil
+          subject[1]['media'].should == 'all'
+          subject[2]['media'].should == 'projection, screen'
+        end
+      end
+
       describe 'with a dir' do
         before { options[:source] = 'spec/fixtures/xml_and_xsl' }
         its(:source_path) { should == 'spec/fixtures/xml_and_xsl/document.xml' }

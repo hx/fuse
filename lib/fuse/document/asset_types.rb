@@ -36,15 +36,20 @@ class Fuse::Document::Asset
   end
 
   class StyleSheet < self
+    MEDIA_PATTERN = /\(([a-z]+(?:,\s*[a-z]+)*)\)\.[a-z]+$/i
     include HasDependents
     def embed_with
       {
           tag_name: 'link',
           attributes: {
               rel: 'stylesheet',
-              href: path.sub(%r`^/`, '')
+              href: path.sub(%r`^/`, ''),
+              media: media
           }
       }
+    end
+    def media
+      @media ||= (match = MEDIA_PATTERN.match(path)) && match[1].split(/,\s*/).sort.join(', ')
     end
     def compress; ::Sass.compile raw, style: :compressed end
     class Sass < self
