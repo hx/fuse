@@ -75,6 +75,11 @@ module Fuse
         options[:title] = t
       end
 
+      opts.on('-v',
+              '--version',
+              'Show Fuse version.'
+      ) { abort Fuse::VERSION }
+
       opts.on('-x',
               '--xsl FILE',
               'XSL transformation stylesheet. Default is current directory.'

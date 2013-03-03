@@ -34,11 +34,11 @@ class Fuse::Document::Asset
   end
 
   def raw
-    @raw ||= File.open(full_path, 'rb') { |f| f.read }
+    File.open(full_path, 'rb') { |f| f.read }
   end
 
   def filtered
-    @filtered ||= filter? ? filter : raw
+    filter? ? filter : raw
   end
 
   def filter?
