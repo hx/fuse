@@ -130,4 +130,16 @@ describe Fuse::Document do
 
   end
 
+  describe 'assets whose filenames start with a dot' do
+    before do
+      options[:source] = 'spec/fixtures/dotfile_assets'
+      options[:embed_assets] = false
+    end
+    subject { Nokogiri::HTML(Fuse::Document.new(options).to_s) }
+    it 'should have no stylesheets or scripts' do
+      subject.css('> html > head > link[rel=stylesheet]').should be_empty
+      subject.css('> html > head > script[src]').should be_empty
+    end
+  end
+
 end
