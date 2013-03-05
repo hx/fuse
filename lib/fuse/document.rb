@@ -125,7 +125,7 @@ class Fuse::Document
         raise Fuse::Exception::SourceUnknown::NotFound.new(option_value) unless File.exists?(option_value)
         return [option_value] unless File.directory? option_value
       end
-      Dir[File.join(option_value || root, "**/*.{#{extensions.join(',')}}")]
+      Dir[File.join(option_value || root, "**/*.{#{extensions.join(',')}}")].select{ |f| File.size? f }
     end
 
     def expect_one(list, option, missing_exception)
