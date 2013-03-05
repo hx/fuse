@@ -13,27 +13,38 @@ class Fuse::Server
     call_options = @options.merge Hash[request.GET.map{ |k, v| [k.to_sym, v] }]
 
     if @root && (asset = Fuse::Document::Asset.for(request.path))
+      log env, "Serve asset #{asset.path}"
       return asset.call(env)
     end
 
     begin
       doc = Fuse::Document.new(call_options)
       @root = doc.root
+      result = doc.to_s
+      log env, "Using    #{doc.xsl_path} for transformation" if doc.xsl_path
+      log env, "Rendered #{doc.source_path} (#{result.length} bytes)", :success
     rescue Fuse::Exception::SourceUnknown::TooManySources
-      doc = render_list($!.options, $!.option_name, request)
+      result = render_list($!.options, $!.option_name, request)
+      log env, 'Multiple source document options', :notice
     rescue Fuse::Exception
       if $!.message
-        doc = render_error($!.message)
+        result = render_error($!.message)
+        log env, $!.message, :notice
       else
         raise
       end
     end
 
-    [200, {'Content-Type' => 'text/html'}, [doc.to_s]]
+    [200, {'Content-Type' => 'text/html'}, [result]]
 
   end
 
   private
+
+    def log(env, message, *args)
+      Fuse.log_file.write "#{Time.now.strftime '%Y-%m-%d %H:%M:%S'} [#{env['REMOTE_ADDR']}] GET #{env['REQUEST_PATH']} "
+      Fuse.log message, *args
+    end
 
     def render_error(text)
       render_body do |h|

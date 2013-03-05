@@ -53,10 +53,20 @@ class Fuse::Document::Asset
     def media
       @media ||= (match = MEDIA_PATTERN.match(path)) && match[1].split(/,\s*/).sort.join(', ')
     end
-    def compress; ::Sass.compile raw, style: :compressed end
+    def compress
+      original = raw
+      compressed = ::Sass.compile original, style: :compressed
+      Fuse.log "SASS: Compressed #{path} from #{original.length} bytes to #{compressed.length} bytes", :success
+      compressed
+    end
     def type; 'text/css' end
     class Sass < self
-      def filter; ::Sass.compile raw, style: :expanded end
+      def filter
+        original = raw
+        compiled = ::Sass.compile original, style: :expanded
+        Fuse.log "SASS: Compiled #{path} from #{original.length} bytes to #{compiled.length} bytes", :success
+        compiled
+      end
     end
   end
 
@@ -73,10 +83,20 @@ class Fuse::Document::Asset
           }
       }
     end
-    def compress; Uglifier.compile filtered end
+    def compress
+      original = filtered
+      compressed = Uglifier.compile original
+      Fuse.log "Uglifier: Compressed #{path} from #{original.length} bytes to #{compressed.length} bytes", :success
+      compressed
+    end
     def type; 'text/javascript' end
     class Coffee < self
-      def filter; CoffeeScript.compile raw end
+      def filter
+        original = raw
+        compiled = CoffeeScript.compile original
+        Fuse.log "CoffeeScript: Compiled #{path} from #{original.length} bytes to #{compiled.length} bytes", :success
+        compiled
+      end
     end
   end
 

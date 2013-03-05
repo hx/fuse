@@ -30,7 +30,7 @@ class Fuse::Document::Asset
   end
 
   def relative_path
-    @relative_path ||= path.sub(%r`^/`, '')
+    @relative_path ||= path.sub(%r`^[\\/]`, '')
   end
 
   def raw

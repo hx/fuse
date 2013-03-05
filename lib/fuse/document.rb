@@ -37,6 +37,7 @@ class Fuse::Document
       collection = assets.of_type(klass).sort!
       next unless collection.length > 0
       if @options[:embed_assets]
+        #todo recreate stylesheet media attributes
         tag = Nokogiri::XML::Node.new(klass::EMBED_WITH, document)
         raw = collection.map do |asset|
           tag['type'] = asset.type
