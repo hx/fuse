@@ -4,6 +4,7 @@ class Fuse::Server
 
   def initialize(options)
     @options = options
+    Fuse.log "Starting Fuse Server v#{Fuse::VERSION}", :success
   end
 
   def call(env)
