@@ -3,7 +3,7 @@ require 'thin'
 
 module Fuse
 
-  VERSION = '0.1.4'
+  VERSION = '0.1.5'
 
   LOG_COLOURS = {
       info:     6, # cyan

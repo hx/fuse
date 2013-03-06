@@ -112,6 +112,7 @@ class Fuse::Document::Asset
     MIME_TYPES = {
         otf: 'application/x-font-opentype',
         ttf: 'application/x-font-truetype',
+        woff: 'application/x-font-woff'
     }
     VARIANT_PATTERN = %r`([^/]+?)(?:[-_ ](normal|bold|bolder|lighter|[1-9]00))?(?:[-_ ](normal|italic|oblique))?\.[a-z]+$`
     def family; @family ||= variant[:family] end

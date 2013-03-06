@@ -69,7 +69,7 @@ class Fuse::Document
         font_css << 'font-family: "%s";' % first.family
         font_css << 'font-weight: %s;'   % first.weight
         font_css << 'font-style: %s;'    % first.style
-        font_css << 'src: url("%s");'    % formats[:eot].relative_path if formats[:eot]
+        font_css << 'src: url("%s");'    % formats[:eot].relative_path if formats[:eot] && !@options[:embed_assets]
         css_formats = []
         Fuse::Document::Asset::Font::CSS_FORMATS.each do |css_format|
           css_formats << 'url("%s") format("%s")' % [
@@ -78,6 +78,7 @@ class Fuse::Document
           ] if formats[css_format[:extension]]
         end
         font_css << 'src: %s;' % css_formats.join(', ') if css_formats.any?
+        font_css << '}'
       end
     end
     unless font_css.empty?
