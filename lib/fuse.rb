@@ -3,7 +3,7 @@ require 'thin'
 
 module Fuse
 
-  VERSION = '0.1.5'
+  VERSION = '0.1.6'
 
   LOG_COLOURS = {
       info:     6, # cyan
@@ -42,6 +42,10 @@ require 'fuse/exceptions'
 require 'fuse/server'
 require 'fuse/document'
 require 'fuse/document/asset'
+require 'fuse/document/asset/has_dependents'
+require 'fuse/document/asset/style_sheet'
+require 'fuse/document/asset/java_script'
+require 'fuse/document/asset/font'
 require 'fuse/document/asset_types'
 require 'fuse/document/asset_collection'
 

@@ -6,7 +6,8 @@ module Fuse
   DEFAULTS = {
     common: {
       source: '.',
-      encoding: 'UTF-8'
+      encoding: 'UTF-8',
+      preserve_white: true
     },
     server: {
         addr: '127.0.0.1',
@@ -30,7 +31,7 @@ module Fuse
 
       "
 
-Usage: #{$0} [command] [options]
+Usage: #{$0} command [options]
 
 Commands:
     server  : Run a local testing server
@@ -95,6 +96,11 @@ Options:
               'Show Fuse version.'
       ) { abort Fuse::VERSION }
 
+      opts.on('-w',
+              '--[no-]preserve-white',
+              wrap("Preserve all white space in HTML. Default is #{DEFAULTS[:common][:preserve_white]}.")
+      ) { |w| options[:preserve_white] = w }
+
       opts.on('-x',
               '--xsl FILE',
               wrap('XSL transformation stylesheet. Default is current directory.')
@@ -123,8 +129,9 @@ Options:
         begin
           doc = Document.new(options)
           log "Compiling #{doc.source_path}"
-          print doc.to_s
-          log 'Done.', :success
+          out = doc.to_s
+          print out
+          log "Wrote #{out.bytesize} byte(s) to STDOUT.", :success
         rescue Exception::SourceUnknown::TooManySources
           log "Found more than one potential #{$!.option_name} document. Please specify one with --#{$!.option_name}.", :notice
           log $!.options.join "\n"

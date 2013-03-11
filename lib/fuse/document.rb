@@ -13,24 +13,29 @@ class Fuse::Document
   end
 
   def to_s
-    result.to_html encoding: @options[:encoding]
+    ret = result.to_html encoding: @options[:encoding], indent: 0
+    ret.gsub!(/(\s)\s+/, '\\1') unless @options[:preserve_white]
+    ret
   end
 
   def result
 
-    #todo find a way to transform Nokogiri XML to HTML without serializing
-
     document = if xsl_path
-      Nokogiri::HTML(Nokogiri::XSLT(File.read xsl_path).transform(Nokogiri::XML(File.read source_path)).to_html encoding: @options[:encoding])
+      Nokogiri::XSLT(File.read xsl_path).transform(Nokogiri(File.read source_path))
     else
       Nokogiri::HTML(File.read source_path)
     end
 
-    html = document.css('> html').first
+    while (html = document.css('> html').first).nil?
+      document = Nokogiri::HTML(document.to_html encoding: @options[:encoding])
+    end
     body = html.css('> body').first
     head = html.css('> head').first || body.add_previous_sibling(Nokogiri::XML::Node.new 'head', document)
 
-    document.title = @options[:title] unless @options[:title].nil?
+    unless @options[:title].nil?
+      title = head.css('> title').first || head.add_child(Nokogiri::XML::Node.new('title', document))
+      title.children = Nokogiri::XML::Text.new(@options[:title], document)
+    end
 
     #attach stylesheets and scripts
     [Fuse::Document::Asset::StyleSheet, Fuse::Document::Asset::JavaScript].each do |klass|
