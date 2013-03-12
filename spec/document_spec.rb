@@ -118,6 +118,7 @@ describe Fuse::Document do
           should include 'url(data:image/png;base64,MTIz)'
           should include '<img src="data:image/jpeg;base64,NDU2"'
           should include 'url(data:image/gif;base64,Nzg5)"></div>'
+          should include '<link rel="shortcut icon" href="data:image/x-icon;base64,eHl6">'
         end
       end
 

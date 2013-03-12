@@ -5,6 +5,12 @@ require 'uglifier'
 class Fuse::Document::Asset
 
   class Image < self
+    MIME_TYPES = {
+        ico: 'image/x-icon'
+    }
+    def type
+      MIME_TYPES[extension.to_sym] || super
+    end
   end
 
   class Xml < self
@@ -27,6 +33,7 @@ class Fuse::Document::Asset
       png:    Image,
       gif:    Image,
       svg:    Image,
+      ico:    Image,
       ttf:    Font,
       woff:   Font,
       eot:    Font,

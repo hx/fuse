@@ -37,6 +37,13 @@ class Fuse::Document
       title.children = Nokogiri::XML::Text.new(@options[:title], document)
     end
 
+    #add favicon
+    assets.of_type(Fuse::Document::Asset::Image).select{ |a| a.path.match %r`\bfavicon\.\w+$` }.each do |asset|
+      head << link = Nokogiri::XML::Node.new('link', document)
+      link['rel'] = 'shortcut icon'
+      link['href'] = asset.relative_path
+    end
+
     #attach stylesheets and scripts
     [Fuse::Document::Asset::StyleSheet, Fuse::Document::Asset::JavaScript].each do |klass|
       collection = assets.of_type(klass).sort!
