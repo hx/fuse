@@ -30,4 +30,8 @@ class Fuse::Document::AssetCollection < Array
     self << asset
   end
 
+  def group_by(*args, &block)
+    Hash[super(*args, &block).map{ |k, v| [k, self.class.new(v)] }]
+  end
+
 end

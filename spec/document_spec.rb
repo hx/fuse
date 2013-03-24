@@ -143,4 +143,16 @@ describe Fuse::Document do
     end
   end
 
+  describe 'ie conditional comments' do
+    before do
+      options[:source] = 'spec/fixtures/ie'
+      options[:embed_assets] = true
+    end
+    subject { Fuse::Document.new(options).to_s }
+    it { should include '<!--[if !IE]> --><style type="text/css">*{content: "NOT IE"}</style>' + "\n" + '<!-- <![endif]-->' }
+    it { should include '<!--[if IE 6]><style type="text/css">*{content: "= IE 6"}</style><![endif]-->' }
+    it { should include '<!--[if lte IE 8]><style type="text/css" media="print">*{content: "<= IE 8"}</style><![endif]-->' }
+    it { should include '<!--[if gt IE 8]><style type="text/css" media="screen">*{content: "> IE 8"}</style><![endif]-->' }
+  end
+
 end

@@ -44,27 +44,18 @@ class Fuse::Document
       link['href'] = asset.relative_path
     end
 
-    #attach stylesheets and scripts
-    [Fuse::Document::Asset::StyleSheet, Fuse::Document::Asset::JavaScript].each do |klass|
-      collection = assets.of_type(klass).sort!
-      next unless collection.length > 0
-      if @options[:embed_assets]
-        #todo recreate stylesheet media attributes
-        tag = Nokogiri::XML::Node.new(klass::EMBED_WITH, document)
-        raw = collection.map do |asset|
-          tag['type'] = asset.type
-          (@options[:compress_assets] ? asset.compress : asset.filtered).strip
-        end.reject{ |x| x.length == 0 }.join(klass::JOIN_WITH)
-        next unless raw.length > 0
-        tag.content = raw
-        head << tag
-      else
-        collection.each do |asset|
-          data = asset.reference_with
-          tag = Nokogiri::XML::Node.new(data[:tag_name], document)
-          data[:attributes].each { |k, v| tag[k] = v unless v.nil? }
-          head << tag
-        end
+    #attach scripts
+    scripts = assets.of_type(Fuse::Document::Asset::JavaScript).sort!
+    head << tag_for_collection(scripts, document) unless scripts.empty?
+
+    #attach stylesheets
+    style_sheets = assets.of_type(Fuse::Document::Asset::StyleSheet)
+    style_sheets.group_by(&:conditional_signature).each_value do |conditional_collection|
+      conditional_collection.group_by(&:media).each do |media, media_collection|
+        media_collection.sort!
+        tag = tag_for_collection(media_collection, document)
+        tag['media'] = media unless media.nil? || media.empty? || Nokogiri::XML::NodeSet === tag
+        head << Nokogiri::HTML.fragment(media_collection.first.conditional.wrap(tag.to_html(encoding: @options[:encoding])), @options[:encoding])
       end
     end
 
@@ -94,7 +85,7 @@ class Fuse::Document
       end
     end
     unless font_css.empty?
-      style_node = head.css('style:not([media]), style[media=all]').first || head.add_child(Nokogiri::XML::Node.new 'style', document)
+      style_node = head.add_child(Nokogiri::XML::Node.new 'style', document)
       style_node.content = font_css + style_node.content
     end
 
@@ -150,5 +141,27 @@ class Fuse::Document
 
     def assets
       @assets ||= Asset[root]
+    end
+
+    def tag_for_collection(collection, document)
+      return if collection.empty?
+      klass = collection.first.class
+      if @options[:embed_assets]
+        tag = Nokogiri::XML::Node.new(klass::EMBED_WITH, document)
+        raw = collection.map do |asset|
+          tag['type'] = asset.type
+          (@options[:compress_assets] ? asset.compress : asset.filtered).strip
+        end.reject{ |x| x.length == 0 }.join(klass::JOIN_WITH)
+        return unless raw.length > 0
+        tag.content = raw
+        tag
+      else
+        Nokogiri::XML::NodeSet.new(document, collection.map do |asset|
+          data = asset.reference_with
+          tag = Nokogiri::XML::Node.new(data[:tag_name], document)
+          data[:attributes].each { |k, v| tag[k] = v unless v.nil? }
+          tag
+        end)
+      end
     end
 end
