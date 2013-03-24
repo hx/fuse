@@ -1,7 +1,3 @@
-require 'sass'
-require 'coffee-script'
-require 'uglifier'
-
 class Fuse::Document::Asset
 
   class Image < self
@@ -13,13 +9,8 @@ class Fuse::Document::Asset
     end
   end
 
-  class Xml < self
-  end
-
-  class Xsl < self
-  end
-
-  class Html < self
+  def self.const_missing(name)
+    (@anonymous_subclasses ||= {})[name] ||= Class.new(self)
   end
 
   TYPES = {

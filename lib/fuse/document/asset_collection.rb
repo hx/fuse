@@ -24,9 +24,12 @@ class Fuse::Document::AssetCollection < Array
     self
   end
 
-  def push_with_dependents(asset)
-    #todo check for circular references
-    asset.dependents.each { |d| push_with_dependents d }
+  def push_with_dependents(asset, pushed = [])
+    pushed << asset
+    asset.dependents.each do |dependent|
+      raise Fuse::Exception::CircularDependency.new(asset, dependent) if pushed.include?(dependent)
+      push_with_dependents dependent, pushed
+    end
     self << asset
   end
 

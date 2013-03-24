@@ -2,20 +2,24 @@ require 'base64'
 
 class Fuse::Document::Asset
 
-  def self.[](dir)
-    assets = Fuse::Document::AssetCollection.new
-    Dir[File.join dir, '**/*.*'].each do |full_path|
-      asset = self.for(full_path[dir.length..-1], dir)
-      assets << asset if asset
-    end
-    assets
-  end
+  class << self
 
-  def self.for(path, root = Dir.pwd)
-    full_path = File.join root, path
-    return unless File.exists? full_path
-    type = TYPES[(File.extname(path)[1..-1] || '').to_sym]
-    (@cache ||= {})[File.expand_path full_path] ||= type.new(path, root) if type
+    def [](dir)
+      assets = Fuse::Document::AssetCollection.new
+      Dir[File.join dir, '**/*.*'].each do |full_path|
+        asset = self.for(full_path[dir.length..-1], dir)
+        assets << asset if asset
+      end
+      assets
+    end
+
+    def for(path, root = Dir.pwd)
+      full_path = File.join root, path
+      return unless File.exists? full_path
+      type = TYPES[(File.extname(path)[1..-1] || '').to_sym]
+      (@cache ||= {})[File.expand_path full_path] ||= type.new(path, root) if type
+    end
+
   end
 
   attr_reader :path
@@ -58,10 +62,10 @@ class Fuse::Document::Asset
     @type ||= Rack::Mime.mime_type('.' + extension)
   end
 
-  def to_datauri(compress = false)
+  def to_datauri(compressed = false)
     'data:%s;base64,%s' % [
         type,
-        Base64.strict_encode64(compress && respond_to?(:compress) ? self.compress : raw)
+        Base64.strict_encode64(compressed && respond_to?(:compress) ? compress : raw)
     ]
   end
 

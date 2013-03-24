@@ -4,7 +4,7 @@ module Fuse::Document::Asset::HasDependents
   REQUIRE_PATTERN = %r`^\s*(?:\*|//)=\s+(require|require_glob)\s+(.+?)\s*$`
 
   def dependents
-    ret = Fuse::Document::AssetCollection.new
+    collection = Fuse::Document::AssetCollection.new
     local_root = File.dirname(full_path)
     if (comments = raw[COMMENT_PATTERN])
       comments.lines.each do |line|
@@ -21,11 +21,11 @@ module Fuse::Document::Asset::HasDependents
           end.reject do |p|
             p.nil?
           end.each do |p|
-            ret << p
+            collection << p
           end
         end
       end
     end
-    ret
+    collection
   end
 end

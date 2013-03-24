@@ -1,9 +1,6 @@
-require 'optparse'
-require 'thin'
-
 module Fuse
 
-  VERSION = '0.1.8'
+  VERSION = '0.1.9'
 
   LOG_COLOURS = {
       info:     6, # cyan
@@ -12,25 +9,25 @@ module Fuse
       notice:   3  # yellow
   }
 
-  def self.root
-    @root ||= File.expand_path File.dirname(__FILE__)
-  end
+  class << self
 
-  def self.log_file=(file)
-    @log_file = file
-  end
+    def root
+      @root ||= File.expand_path File.dirname(__FILE__)
+    end
 
-  def self.log_file
-    @log_file ||= $stderr
-  end
+    def log_file=(file)
+      @log_file = file
+    end
 
-  def self.log(message, type = nil)
-    m = "\x1b["
-    m << (30 + (LOG_COLOURS[type] || LOG_COLOURS[:info])).to_s
-    m << 'm'
-    m << message
-    m << "\x1b[0m"
-    log_file.puts m
+    def log_file
+      @log_file ||= $stderr
+    end
+
+    def log(message, type = nil)
+      colour = 30 + (LOG_COLOURS[type] || LOG_COLOURS[:info])
+      log_file.puts "\x1b[#{colour}m#{message}\x1b[0m"
+    end
+
   end
 
 end

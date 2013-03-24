@@ -23,7 +23,9 @@ module Fuse
   SUMMARY_WIDTH  = 30
   SUMMARY_INDENT = 4
 
-  def self.main
+  class << self
+
+  def main
 
     options = {}
 
@@ -148,7 +150,7 @@ Options:
 
   private
 
-    def self.merge_defaults(options)
+    def merge_defaults(options)
       if (defaults = DEFAULTS[(ARGV[0] || '').to_sym])
         defaults.merge(DEFAULTS[:common]).merge(options)
       else
@@ -156,12 +158,13 @@ Options:
       end
     end
 
-    def self.wrap(text, width = 80 - SUMMARY_WIDTH)
+    def wrap(text, width = 80 - SUMMARY_WIDTH)
       text.gsub(/(.{1,#{width}})(\s+|$)/, "\\1\n#{' ' * (SUMMARY_WIDTH + SUMMARY_INDENT + 1)}").strip
     end
 
-    def self.summary(opts)
+    def summary(opts)
       abort opts.summarize([], SUMMARY_WIDTH, SUMMARY_WIDTH - 1, ' ' * SUMMARY_INDENT).join
     end
 
+  end
 end

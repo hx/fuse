@@ -16,9 +16,17 @@ class Fuse::Exception < ::RuntimeError
     end
     def message; 'Couldn\'t determine source document. Please specify one with --source.' end
   end
-  class XslMissing
+  class XslMissing < self
     def message
       'Couldn\'t locate an XSL stylesheet to transform the source document. Please specify one with --xsl.'
+    end
+  end
+  class CircularDependency < self
+    def initialize(offender, dependent)
+      @offender, @dependent = offender, dependent
+    end
+    def message
+      "Found circular dependency as #{@offender.path} depends upon #{@dependent.path}"
     end
   end
   def message; end

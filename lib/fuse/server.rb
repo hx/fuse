@@ -26,9 +26,11 @@ class Fuse::Server
       result = doc.to_s
       log env, "Using    #{doc.xsl_path} for transformation" if doc.xsl_path
       log env, "Rendered #{doc.source_path} (#{result.length} bytes)", :success
+
     rescue Fuse::Exception::SourceUnknown::TooManySources
       result = render_list($!.options, $!.option_name, request)
       log env, 'Multiple source document options', :notice
+
     rescue Fuse::Exception
       if $!.message
         result = render_error($!.message)
@@ -36,6 +38,7 @@ class Fuse::Server
       else
         raise
       end
+
     end if request.path == '/'
 
     if result.nil?

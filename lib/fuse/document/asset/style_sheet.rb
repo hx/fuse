@@ -1,3 +1,5 @@
+require 'sass'
+
 class Fuse::Document::Asset
   class StyleSheet < self
 

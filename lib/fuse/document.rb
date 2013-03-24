@@ -69,9 +69,7 @@ class Fuse::Document
       fonts.values.each do |formats|
         first = formats.values.first
         font_css << '@font-face{'
-        font_css << 'font-family: "%s";' % first.family
-        font_css << 'font-weight: %s;'   % first.weight
-        font_css << 'font-style: %s;'    % first.style
+        font_css << first.variant.map{ |k, v| 'font-%s: "%s";' % [k, v] }.join
         font_css << 'src: url("%s");'    % formats[:eot].relative_path if formats[:eot] && !@options[:embed_assets]
         css_formats = []
         Fuse::Document::Asset::Font::CSS_FORMATS.each do |css_format|

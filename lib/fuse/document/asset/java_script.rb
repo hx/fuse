@@ -1,8 +1,14 @@
+require 'coffee-script'
+require 'uglifier'
+
 class Fuse::Document::Asset
   class JavaScript < self
+
     EMBED_WITH = 'script'
     JOIN_WITH = ';'
+
     include HasDependents
+
     def reference_with
       {
           tag_name: 'script',
@@ -12,13 +18,16 @@ class Fuse::Document::Asset
           }
       }
     end
+
     def compress
       original = filtered
       compressed = Uglifier.compile original
       Fuse.log "Uglifier: Compressed #{path} from #{original.bytesize} bytes to #{compressed.bytesize} bytes", :success
       compressed
     end
+
     def type; 'text/javascript' end
+
     class Coffee < self
       def filter
         original = raw
@@ -27,6 +36,7 @@ class Fuse::Document::Asset
         compiled
       end
     end
+
   end
 
 end
