@@ -10,6 +10,8 @@ class Fuse::Server
   def call(env)
 
     request = Rack::Request.new(env)
+    result = nil
+    status = 200
 
     call_options = @options.merge Hash[request.GET.map{ |k, v| [k.to_sym, v] }]
 
@@ -34,9 +36,15 @@ class Fuse::Server
       else
         raise
       end
+    end if request.path == '/'
+
+    if result.nil?
+      log env, 'Not found', :error
+      status = 404
+      result = render_error('Not found')
     end
 
-    [200, {'Content-Type' => 'text/html'}, [result]]
+    [status, {'Content-Type' => 'text/html'}, [result]]
 
   end
 

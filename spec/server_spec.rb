@@ -25,4 +25,12 @@ describe Fuse::Server, type: :feature do
 
   end
 
+  describe 'a not-found' do
+
+    before { visit '/unicorn' }
+    its(:status_code) { should == 404 }
+    it { should have_selector 'p', text: 'Not found' }
+
+  end
+
 end
