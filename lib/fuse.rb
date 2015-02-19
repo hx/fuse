@@ -1,7 +1,5 @@
 module Fuse
 
-  VERSION = '0.1.9'
-
   LOG_COLOURS = {
       info:     6, # cyan
       success:  2, # green
@@ -34,6 +32,7 @@ end
 
 $:.unshift Fuse.root unless $:.include?(Fuse.root)
 
+require 'fuse/version'
 require 'fuse/main'
 require 'fuse/exceptions'
 require 'fuse/server'

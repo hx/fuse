@@ -1,4 +1,8 @@
-require File.expand_path('../lib/fuse', __FILE__)
+# coding: utf-8
+lib = File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+
+require 'fuse/version'
 
 Gem::Specification.new do |s|
   s.name              = 'fuse'
@@ -16,13 +20,13 @@ EOF
   s.homepage          = 'https://github.com/hx/fuse'
   s.executables       += Dir['bin/*'].map { |f| File.basename(f) }
   '
-    thin              ~> 1.5
-    uglifier          ~> 1.3
-    nokogiri          ~> 1.5.6
-    coffee-script     ~> 2.2
-    sass              ~> 3.2.5
+    thin              ~> 1.6
+    uglifier          ~> 2.6
+    nokogiri          ~> 1.6
+    coffee-script     ~> 2.3
+    sass              ~> 3.4
 
   '.strip.split(/[\r\n]+/).each { |line| s.add_dependency *(line.strip.split ' ', 2) }
-  s.add_development_dependency 'rspec', '~> 2.12.2'
-  s.add_development_dependency 'capybara', '~> 2.0.2'
+  s.add_development_dependency 'rspec', '~> 2.12'
+  s.add_development_dependency 'capybara', '~> 2.0'
 end
